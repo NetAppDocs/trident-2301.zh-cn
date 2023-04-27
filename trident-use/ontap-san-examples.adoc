@@ -1,0 +1,446 @@
+---
+sidebar: sidebar 
+permalink: trident-use/ontap-san-examples.html 
+keywords: map backends, storage classes, trident backend, ontap san, ontap san economy, options, storageclasses, fsx 
+summary: 了解如何在您的 Astra Trident 安装中创建和使用 ONTAP SAN 驱动程序。本节提供了后端配置示例以及有关如何将后端映射到 StorageClasses 的详细信息。 
+---
+= ONTAP SAN配置选项和示例
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+了解如何在您的 Astra Trident 安装中创建和使用 ONTAP SAN 驱动程序。本节提供了后端配置示例以及有关如何将后端映射到 StorageClasses 的详细信息。
+
+
+
+== 后端配置选项
+
+有关后端配置选项，请参见下表：
+
+[cols="3"]
+|===
+| 参数 | Description | Default 
+
+
+| `version` |  | 始终为 1 
+
+
+| `storageDriverName` | 存储驱动程序的名称 | "ontap-nas" ， "ontap-nas-economy-" ， "ontap-nas-flexgroup" ， "ontap-san " ， "ontap-san-economy-" 
+
+
+| `backendName` | 自定义名称或存储后端 | 驱动程序名称 + "_" + dataLIF 
+
+
+| `managementLIF` | 集群或SVM管理LIF的IP地址要进行无缝MetroCluster 切换、必须指定SVM管理LIF。可以指定完全限定域名(FQDN)。如果使用安装了Astra Trident、则可以将设置为使用IPv6地址 `--use-ipv6` 标志。IPv6地址必须用方括号定义、例如：[28e8：d9fb：a825：b7bf：69a8：d02f：9e7b：3555]。 | "10.0.0.1 " ， "2001 ： 1234 ： abcd ：：： fefe] " 
+
+
+| `dataLIF` | 协议 LIF 的 IP 地址。*请勿为iSCSI指定。* Astra Trident使用 link:https://docs.netapp.com/us-en/ontap/san-admin/selective-lun-map-concept.html["ONTAP 选择性LUN映射"^] 发现建立多路径会话所需的iSCI LIF。如果出现、则会生成警告 `dataLIF` 已明确定义。 | 由SVM派生 
+
+
+| `useCHAP` | 使用CHAP对iSCSI的ONTAP SAN驱动程序进行身份验证[布尔值]。设置为 `true` 让Astra Trident为后端给定的SVM配置并使用双向CHAP作为默认身份验证。请参见 link:ontap-san-prep.html["准备使用ONTAP SAN驱动程序配置后端"] 了解详细信息。 | false 
+
+
+| `chapInitiatorSecret` | CHAP 启动程序密钥。如果为、则为必需项 `useCHAP=true` | " 
+
+
+| `labels` | 要应用于卷的一组任意 JSON 格式的标签 | " 
+
+
+| `chapTargetInitiatorSecret` | CHAP 目标启动程序密钥。如果为、则为必需项 `useCHAP=true` | " 
+
+
+| `chapUsername` | 入站用户名。如果为、则为必需项 `useCHAP=true` | " 
+
+
+| `chapTargetUsername` | 目标用户名。如果为、则为必需项 `useCHAP=true` | " 
+
+
+| `clientCertificate` | 客户端证书的 Base64 编码值。用于基于证书的身份验证 | " 
+
+
+| `clientPrivateKey` | 客户端专用密钥的 Base64 编码值。用于基于证书的身份验证 | " 
+
+
+| `trustedCACertificate` | 受信任 CA 证书的 Base64 编码值。可选。用于基于证书的身份验证。 | " 
+
+
+| `username` | 与ONTAP 集群通信所需的用户名。用于基于凭据的身份验证。 | " 
+
+
+| `password` | 与ONTAP 集群通信所需的密码。用于基于凭据的身份验证。 | " 
+
+
+| `svm` | 要使用的 Storage Virtual Machine | 如果是SVM、则派生 `managementLIF` 已指定 
+
+
+| `igroupName` | 要使用的SAN卷的igroup的名称。请参见  有关详细信息 ... | "trident — < 后端 UUID >" 
+
+
+| `storagePrefix` | 在 SVM 中配置新卷时使用的前缀。无法稍后修改。要更新此参数、您需要创建一个新的后端。 | Trident 
+
+
+| `limitAggregateUsage` | 如果使用量超过此百分比，则配置失败。如果您使用适用于NetApp ONTAP 后端的Amazon FSX、请勿指定  `limitAggregateUsage`。提供的 `fsxadmin` 和 `vsadmin` 请勿包含检索聚合使用情况所需的权限、并使用Astra Trident对其进行限制。 | " （默认情况下不强制实施） 
+
+
+| `limitVolumeSize` | 如果请求的卷大小超过此值、则配置失败。此外、还会限制它为qtree和LUN管理的卷的最大大小。 | " （默认情况下不强制实施） 
+
+
+| `lunsPerFlexvol` | 每个 FlexVol 的最大 LUN 数，必须在 50 ， 200 范围内 | 100 
+
+
+| `debugTraceFlags` | 故障排除时要使用的调试标志。例如、除非您正在进行故障排除并需要详细的日志转储、否则｛"api"：false、"method "：true｝请勿使用。 | 空 
+
+
+| `useREST` | 用于使用 ONTAP REST API 的布尔参数。* 技术预览 *
+`useREST` 作为一个*技术预览版提供、建议用于测试环境、而不是生产工作负载。设置为时 `true`、Astra Trident将使用ONTAP REST API与后端进行通信。此功能需要使用ONTAP 9.11.1及更高版本。此外、使用的ONTAP 登录角色必须有权访问 `ontap` 应用程序。这一点可通过预定义来满足 `vsadmin` 和 `cluster-admin` 角色。
+`useREST` MetroCluster 不支持。 | false 
+|===
+
+
+=== 详细信息 `igroupName`
+
+`igroupName` 可以设置为已在ONTAP 集群上创建的igroup。如果未指定、则Astra Trident会自动创建名为的igroup `trident-<backend-UUID>`。
+
+如果要在环境之间共享SVM、则如果要提供预定义的igroupName、建议为每个Kubernetes集群使用一个igroup。这对于Astra Trident自动维护IQN添加和删除是必需的。
+
+* `igroupName` 可以更新为指向在Astra Trident之外的SVM上创建和管理的新igroup。
+* `igroupName` 可以省略。在这种情况下、Astra Trident将创建并管理名为的igroup `trident-<backend-UUID>` 自动。
+
+
+在这两种情况下，仍可访问卷附件。未来的卷附件将使用更新后的 igroup 。此更新不会中断对后端卷的访问。
+
+
+
+== 用于配置卷的后端配置选项
+
+您可以在中使用这些选项控制默认配置 `defaults` 配置部分。有关示例，请参见以下配置示例。
+
+[cols="3"]
+|===
+| 参数 | Description | Default 
+
+
+| `spaceAllocation` | LUN 的空间分配 | true 
+
+
+| `spaceReserve` | 空间预留模式； " 无 " （精简）或 " 卷 " （厚） | 无 
+
+
+| `snapshotPolicy` | 要使用的 Snapshot 策略 | 无 
+
+
+| `qosPolicy` | 要为创建的卷分配的 QoS 策略组。选择每个存储池 / 后端的 qosPolicy 或 adaptiveQosPolicy 之一。在 Astra Trident 中使用 QoS 策略组需要 ONTAP 9.8 或更高版本。建议使用非共享QoS策略组、并确保策略组分别应用于每个成分卷。共享 QoS 策略组将对所有工作负载的总吞吐量实施上限。 | " 
+
+
+| `adaptiveQosPolicy` | 要为创建的卷分配的自适应 QoS 策略组。选择每个存储池 / 后端的 qosPolicy 或 adaptiveQosPolicy 之一 | " 
+
+
+| `snapshotReserve` | 为快照预留的卷百分比为 "0" | 条件 `snapshotPolicy` 为"无"、否则为"" 
+
+
+| `splitOnClone` | 创建克隆时，从其父级拆分该克隆 | false 
+
+
+| `encryption` | 在新卷上启用NetApp卷加密(NVE)；默认为 `false`。要使用此选项，必须在集群上获得 NVE 的许可并启用 NVE 。如果在后端启用了NAE、则在Astra Trident中配置的任何卷都将启用NAE。有关详细信息、请参见： link:../trident-reco/security-reco.html["Astra Trident如何与NVE和NAE配合使用"]。 | false 
+
+
+| `luksEncryption` | 启用LUKS加密。请参见 link:../trident-reco/security-luks.html["使用Linux统一密钥设置(LUKS)"]。 | "" 
+
+
+| `securityStyle` | 新卷的安全模式 | `unix` 
+
+
+| `tieringPolicy` | 使用 " 无 " 的分层策略 | 适用于 ONTAP 9.5 SVM-DR 之前的配置的 " 仅快照 " 
+|===
+
+
+=== 卷配置示例
+
+下面是定义了默认值的示例：
+
+[listing]
+----
+---
+version: 1
+storageDriverName: ontap-san
+managementLIF: 10.0.0.1
+svm: trident_svm
+username: admin
+password: password
+labels:
+  k8scluster: dev2
+  backend: dev2-sanbackend
+storagePrefix: alternate-trident
+igroupName: custom
+debugTraceFlags:
+  api: false
+  method: true
+defaults:
+  spaceReserve: volume
+  qosPolicy: standard
+  spaceAllocation: 'false'
+  snapshotPolicy: default
+  snapshotReserve: '10'
+
+----
+
+NOTE: 用于使用创建的所有卷 `ontap-san` 驱动程序、Astra Trident会向FlexVol 额外添加10%的容量、以容纳LUN元数据。LUN 将使用用户在 PVC 中请求的确切大小进行配置。Astra Trident 将 FlexVol 增加 10% （在 ONTAP 中显示为可用大小）。用户现在将获得所请求的可用容量。此更改还可防止 LUN 变为只读状态，除非已充分利用可用空间。这不适用于 ontap-san-economy.
+
+用于定义的后端 `snapshotReserve`、Astra Trident将按如下所示计算卷大小：
+
+[listing]
+----
+Total volume size = [(PVC requested size) / (1 - (snapshotReserve percentage) / 100)] * 1.1
+----
+1.1 是 Astra Trident 向 FlexVol 额外添加 10% 以容纳 LUN 元数据。适用于 `snapshotReserve` = 5%、PVC请求= 5GiB、卷总大小为5.79GiB、可用大小为5.5GiB。。 `volume show` 命令应显示与以下示例类似的结果：
+
+image::../media/vol-show-san.png[显示了 volume show 命令的输出。]
+
+目前，调整大小是对现有卷使用新计算的唯一方法。
+
+
+
+== 最低配置示例
+
+以下示例显示了将大多数参数保留为默认值的基本配置。这是定义后端的最简单方法。
+
+
+NOTE: 如果您正在将 NetApp ONTAP 上的 Amazon FSx 与 Astra Trident 结合使用，建议为 LIF 指定 DNS 名称，而不是 IP 地址。
+
+
+
+=== `ontap-san` 具有基于证书的身份验证的驱动程序
+
+这是一个最低后端配置示例。 `clientCertificate`， `clientPrivateKey`，和 `trustedCACertificate` (如果使用可信CA、则可选)将填充 `backend.json` 和分别采用客户端证书、专用密钥和可信CA证书的base64编码值。
+
+[listing]
+----
+---
+version: 1
+storageDriverName: ontap-san
+backendName: DefaultSANBackend
+managementLIF: 10.0.0.1
+svm: svm_iscsi
+useCHAP: true
+chapInitiatorSecret: cl9qxIm36DKyawxy
+chapTargetInitiatorSecret: rqxigXgkesIpwxyz
+chapTargetUsername: iJF4heBRT0TCwxyz
+chapUsername: uh2aNCLSd6cNwxyz
+igroupName: trident
+clientCertificate: ZXR0ZXJwYXB...ICMgJ3BhcGVyc2
+clientPrivateKey: vciwKIyAgZG...0cnksIGRlc2NyaX
+trustedCACertificate: zcyBbaG...b3Igb3duIGNsYXNz
+----
+
+
+=== `ontap-san` 具有双向CHAP的驱动程序
+
+这是一个最低后端配置示例。此基本配置将创建 `ontap-san` 后端 `useCHAP` 设置为 `true`。
+
+[listing]
+----
+---
+version: 1
+storageDriverName: ontap-san
+managementLIF: 10.0.0.1
+svm: svm_iscsi
+labels:
+  k8scluster: test-cluster-1
+  backend: testcluster1-sanbackend
+useCHAP: true
+chapInitiatorSecret: cl9qxIm36DKyawxy
+chapTargetInitiatorSecret: rqxigXgkesIpwxyz
+chapTargetUsername: iJF4heBRT0TCwxyz
+chapUsername: uh2aNCLSd6cNwxyz
+igroupName: trident
+username: vsadmin
+password: password
+----
+
+
+=== `ontap-san-economy` 驱动程序
+
+[listing]
+----
+---
+version: 1
+storageDriverName: ontap-san-economy
+managementLIF: 10.0.0.1
+svm: svm_iscsi_eco
+useCHAP: true
+chapInitiatorSecret: cl9qxIm36DKyawxy
+chapTargetInitiatorSecret: rqxigXgkesIpwxyz
+chapTargetUsername: iJF4heBRT0TCwxyz
+chapUsername: uh2aNCLSd6cNwxyz
+igroupName: trident
+username: vsadmin
+password: password
+----
+
+
+== 虚拟池后端示例
+
+在下面所示的示例后端定义文件中、会为所有存储池设置特定的默认值、例如 `spaceReserve` 无、 `spaceAllocation` 为false、和 `encryption` 为false。虚拟池在存储部分中进行定义。
+
+Astra Trident会在"Comments"字段中设置配置标签。注释在FlexVol 上设置。在配置时、Astra Trident会将虚拟池上的所有标签复制到存储卷。为了方便起见、存储管理员可以按标签为每个虚拟池和组卷定义标签。
+
+在此示例中、某些存储池会设置自己的存储池 `spaceReserve`， `spaceAllocation`，和 `encryption` 值、而某些池会覆盖上述设置的默认值。
+
+[listing]
+----
+---
+version: 1
+storageDriverName: ontap-san
+managementLIF: 10.0.0.1
+svm: svm_iscsi
+useCHAP: true
+chapInitiatorSecret: cl9qxIm36DKyawxy
+chapTargetInitiatorSecret: rqxigXgkesIpwxyz
+chapTargetUsername: iJF4heBRT0TCwxyz
+chapUsername: uh2aNCLSd6cNwxyz
+igroupName: trident
+username: vsadmin
+password: password
+defaults:
+  spaceAllocation: 'false'
+  encryption: 'false'
+  qosPolicy: standard
+labels:
+  store: san_store
+  kubernetes-cluster: prod-cluster-1
+region: us_east_1
+storage:
+- labels:
+    protection: gold
+    creditpoints: '40000'
+  zone: us_east_1a
+  defaults:
+    spaceAllocation: 'true'
+    encryption: 'true'
+    adaptiveQosPolicy: adaptive-extreme
+- labels:
+    protection: silver
+    creditpoints: '20000'
+  zone: us_east_1b
+  defaults:
+    spaceAllocation: 'false'
+    encryption: 'true'
+    qosPolicy: premium
+- labels:
+    protection: bronze
+    creditpoints: '5000'
+  zone: us_east_1c
+  defaults:
+    spaceAllocation: 'true'
+    encryption: 'false'
+----
+以下是的iSCSI示例 `ontap-san-economy` 驱动程序：
+
+[listing]
+----
+---
+version: 1
+storageDriverName: ontap-san-economy
+managementLIF: 10.0.0.1
+svm: svm_iscsi_eco
+useCHAP: true
+chapInitiatorSecret: cl9qxIm36DKyawxy
+chapTargetInitiatorSecret: rqxigXgkesIpwxyz
+chapTargetUsername: iJF4heBRT0TCwxyz
+chapUsername: uh2aNCLSd6cNwxyz
+igroupName: trident
+username: vsadmin
+password: password
+defaults:
+  spaceAllocation: 'false'
+  encryption: 'false'
+labels:
+  store: san_economy_store
+region: us_east_1
+storage:
+- labels:
+    app: oracledb
+    cost: '30'
+  zone: us_east_1a
+  defaults:
+    spaceAllocation: 'true'
+    encryption: 'true'
+- labels:
+    app: postgresdb
+    cost: '20'
+  zone: us_east_1b
+  defaults:
+    spaceAllocation: 'false'
+    encryption: 'true'
+- labels:
+    app: mysqldb
+    cost: '10'
+  zone: us_east_1c
+  defaults:
+    spaceAllocation: 'true'
+    encryption: 'false'
+----
+
+
+== 将后端映射到 StorageClasses
+
+以下StorageClass定义引用了上述虚拟池。使用 `parameters.selector` 字段中、每个StorageClass都会调用可用于托管卷的虚拟池。卷将在选定虚拟池中定义各个方面。
+
+* 第一个StorageClass (`protection-gold`)将映射到中的第一个、第二个虚拟池 `ontap-nas-flexgroup` 中的后端和第一个虚拟池 `ontap-san` 后端。这是唯一一个提供黄金级保护的池。
+* 第二个StorageClass (`protection-not-gold`)将映射到中的第三个、第四个虚拟池 `ontap-nas-flexgroup` 中的后端和第二个、第三个虚拟池 `ontap-san` 后端。这些池是唯一提供黄金级以外保护级别的池。
+* 第三个StorageClass (`app-mysqldb`)将映射到中的第四个虚拟池 `ontap-nas` 中的后端和第三个虚拟池 `ontap-san-economy` 后端。这些池是唯一为 mysqldb 类型的应用程序提供存储池配置的池。
+* 第四个StorageClass (`protection-silver-creditpoints-20k`)将映射到中的第三个虚拟池 `ontap-nas-flexgroup` 中的后端和第二个虚拟池 `ontap-san` 后端。这些池是唯一以 20000 个信用点提供黄金级保护的池。
+* 第五个StorageClass (`creditpoints-5k`)将映射到中的第二个虚拟池 `ontap-nas-economy` 中的后端和第三个虚拟池 `ontap-san` 后端。这些是唯一一款具有 5000 个信用点的池产品。
+
+
+Astra Trident将决定选择哪个虚拟池、并确保满足存储要求。
+
+[listing]
+----
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protection-gold
+provisioner: netapp.io/trident
+parameters:
+  selector: "protection=gold"
+  fsType: "ext4"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protection-not-gold
+provisioner: netapp.io/trident
+parameters:
+  selector: "protection!=gold"
+  fsType: "ext4"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: app-mysqldb
+provisioner: netapp.io/trident
+parameters:
+  selector: "app=mysqldb"
+  fsType: "ext4"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protection-silver-creditpoints-20k
+provisioner: netapp.io/trident
+parameters:
+  selector: "protection=silver; creditpoints=20000"
+  fsType: "ext4"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: creditpoints-5k
+provisioner: netapp.io/trident
+parameters:
+  selector: "creditpoints=5000"
+  fsType: "ext4"
+----

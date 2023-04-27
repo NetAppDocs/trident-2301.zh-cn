@@ -1,0 +1,240 @@
+---
+sidebar: sidebar 
+permalink: trident-use/vol-import.html 
+keywords: volumes, on-demand volume snapshots, import volumes, drivers, tridentctl import, pv, persistent volumes 
+summary: '您可以使用将现有存储卷作为Kubernetes PV导入 `tridentctl import`。' 
+---
+= 导入卷
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+您可以使用将现有存储卷作为Kubernetes PV导入 `tridentctl import`。
+
+
+
+== 支持卷导入的驱动程序
+
+下表介绍了支持导入卷的驱动程序及其引入的版本。
+
+[cols="2*"]
+|===
+| 驱动程序 | 版本。 
+
+
+| `ontap-nas`  a| 
+19.04
+
+
+
+| `ontap-nas-flexgroup`  a| 
+19.04
+
+
+
+| `solidfire-san`  a| 
+19.04
+
+
+
+| `azure-netapp-files`  a| 
+19.04
+
+
+
+| `gcp-cvs`  a| 
+19.04
+
+
+
+| `ontap-san`  a| 
+19.04
+
+|===
+
+
+== 为什么应导入卷？
+
+将卷导入到 Trident 的使用情形有多种：
+
+* 对应用程序进行容器化并重复使用其现有数据集
+* 为临时应用程序使用数据集的克隆
+* 重建发生故障的 Kubernetes 集群
+* 在灾难恢复期间迁移应用程序数据
+
+
+
+
+== 导入的工作原理是什么？
+
+卷导入过程使用永久性卷声明（ PVC ）文件创建 PVC 。PVC 文件应至少包含 name ， namespace ， accessModes 和 storageClassName 字段，如以下示例所示。
+
+[listing]
+----
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: my_claim
+  namespace: my_namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: my_storage_class
+----
+。 `tridentctl` 客户端用于导入现有存储卷。Trident 通过保留卷元数据并创建 PVC 和 PV 来导入卷。
+
+[listing]
+----
+tridentctl import volume <backendName> <volumeName> -f <path-to-pvc-file>
+----
+要导入存储卷，请指定包含该卷的 Astra Trident 后端的名称以及用于唯一标识存储上的卷的名称（例如： ONTAP FlexVol ， Element Volume ， CVS 卷路径）。存储卷必须允许读 / 写访问，并可由指定的 Astra Trident 后端访问。。 `-f` 字符串参数为必填项、用于指定YAML或JSON PVC文件的路径。
+
+当 Astra Trident 收到导入卷请求时，系统会在 PVC 中确定并设置现有卷大小。存储驱动程序导入卷后，系统将创建 PV ，并为其创建一个 Claims Ref 。回收策略最初设置为 `retain` 在PV中。Kubernetes 成功绑定 PVC 和 PV 后，将更新回收策略以匹配存储类的回收策略。存储类的回收策略为时 `delete`、删除PV时、存储卷将被删除。
+
+使用导入卷时 `--no-manage` 参数中、Trident不会在对象的生命周期内对PVC或PV执行任何其他操作。因为Trident会忽略的PV和PVC事件 `--no-manage` 对象、删除PV时不会删除存储卷。卷克隆和卷大小调整等其他操作也会被忽略。如果要对容器化工作负载使用 Kubernetes ，但希望在 Kubernetes 外部管理存储卷的生命周期，则此选项非常有用。
+
+PVC 和 PV 中会添加一个标注，用于指示卷已导入以及 PVC 和 PV 是否已管理。不应修改或删除此标注。
+
+Trident 19.07 及更高版本可处理 PV 的连接，并在导入卷时挂载该卷。对于使用早期版本的 Astra Trident 进行的导入，数据路径中不会执行任何操作，卷导入将不会验证是否可以挂载卷。如果卷导入出错(例如、StorageClass不正确)、您可以通过将PV上的回收策略更改为来恢复 `retain`、删除PVC和PV、然后重试volume import命令。
+
+
+
+== `ontap-nas` 和 `ontap-nas-flexgroup` 导入
+
+使用创建的每个卷 `ontap-nas` 驱动程序是ONTAP 集群上的FlexVol。使用导入FlexVol `ontap-nas` 驱动程序的工作原理相同。ONTAP 集群上已存在的FlexVol 可以作为导入 `ontap-nas` PVC。同样、FlexGroup vols也可以作为导入 `ontap-nas-flexgroup` PVC。
+
+
+IMPORTANT: 要由 Trident 导入 ONTAP 卷，必须为 rw 类型。如果卷的类型为 DP ，则为 SnapMirror 目标卷；应先中断镜像关系，然后再将卷导入到 Trident 中。
+
+
+IMPORTANT: 。 `ontap-nas` 驱动程序无法导入和管理qtree。。 `ontap-nas` 和 `ontap-nas-flexgroup` 驱动程序不允许使用重复的卷名称。
+
+例如、导入名为的卷 `managed_volume` 位于名为的后端 `ontap_nas`、请使用以下命令：
+
+[listing]
+----
+tridentctl import volume ontap_nas managed_volume -f <path-to-pvc-file>
+
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-bf5ad463-afbb-11e9-8d9f-5254004dfdb7 | 1.0 GiB | standard      | file     | c5a6f6a4-b052-423b-80d4-8fb491a14a22 | online | true    |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+----
+导入名为的卷 `unmanaged_volume` (在上 `ontap_nas backend`)、而Trident不会管理此项、请使用以下命令：
+
+[listing]
+----
+tridentctl import volume nas_blog unmanaged_volume -f <path-to-pvc-file> --no-manage
+
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-df07d542-afbc-11e9-8d9f-5254004dfdb7 | 1.0 GiB | standard      | file     | c5a6f6a4-b052-423b-80d4-8fb491a14a22 | online | false   |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+----
+使用时 `--no-manage` 参数、Trident不会重命名卷或验证卷是否已挂载。如果卷未手动挂载，则卷导入操作将失败。
+
+
+NOTE: 先前存在的使用自定义 UnixPermissions 导入卷的错误已得到修复。您可以在 PVC 定义或后端配置中指定 unixPermissions ，并指示 Astra Trident 相应地导入卷。
+
+
+
+== `ontap-san` 导入
+
+Astra Trident 还可以导入包含单个 LUN 的 ONTAP SAN FlexVol 。这与一致 `ontap-san` 驱动程序、用于为FlexVol 中的每个PVC和LUN创建FlexVol。您可以使用 `tridentctl import` 命令的方式与其他情况相同：
+
+* 包括的名称 `ontap-san` 后端。
+* 提供需要导入的 FlexVol 的名称。请记住，此 FlexVol 仅包含一个必须导入的 LUN 。
+* 提供必须与结合使用的PVC定义路径 `-f` 标志。
+* 可以选择对 PVC 进行管理，也可以选择不对其进行管理。默认情况下， Trident 将管理 PVC 并重命名后端的 FlexVol 和 LUN 。要作为非受管卷导入、请传递 `--no-manage` 标志。
+
+
+
+TIP: 导入非受管时 `ontap-san` 卷中的LUN、您应确保FlexVol 中的LUN名为 `lun0` 和映射到具有所需启动程序的igroup。Astra Trident 会自动为受管导入处理此问题。
+
+然后， Astra Trident 将导入 FlexVol 并将其与 PVC 定义关联。Astra Trident还会将FlexVol 重命名为 `pvc-<uuid>` 将FlexVol 中的LUN格式化为 `lun0`。
+
+
+TIP: 建议导入没有活动连接的卷。如果要导入当前使用的卷，请先克隆该卷，然后再执行导入。
+
+
+
+=== 示例
+
+以导入 `ontap-san-managed` 上存在的FlexVol `ontap_san_default` 后端、运行 `tridentctl import` 命令为：
+
+[listing]
+----
+tridentctl import volume ontapsan_san_default ontap-san-managed -f pvc-basic-import.yaml -n trident -d
+
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE  | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-d6ee4f54-4e40-4454-92fd-d00fc228d74a | 20 MiB | basic         | block    | cd394786-ddd5-4470-adc3-10c5ce4ca757 | online | true    |
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+----
+
+IMPORTANT: ONTAP 卷的类型必须为 RW ，才能由 Astra Trident 导入。如果卷的类型为 DP ，则为 SnapMirror 目标卷；在将卷导入到 Astra Trident 之前，应中断镜像关系。
+
+
+
+== `element` 导入
+
+您可以使用 Trident 将 NetApp Element 软件 /NetApp HCI 卷导入到 Kubernetes 集群中。您需要提供Astra Trident后端的名称、以及作为参数的卷和PVC文件的唯一名称 `tridentctl import` 命令：
+
+[listing]
+----
+tridentctl import volume element_default element-managed -f pvc-basic-import.yaml -n trident -d
+
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE  | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-970ce1ca-2096-4ecd-8545-ac7edc24a8fe | 10 GiB | basic-element | block    | d3ba047a-ea0b-43f9-9c42-e38e58301c49 | online | true    |
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+----
+
+NOTE: Element 驱动程序支持重复的卷名称。如果卷名称重复，则 Trident 的卷导入过程将返回错误。作为临时解决策，克隆卷并提供唯一的卷名称。然后导入克隆的卷。
+
+
+
+== `gcp-cvs` 导入
+
+
+TIP: 要在 GCP 中导入由 NetApp Cloud Volumes Service 支持的卷，请按卷路径而非名称来标识该卷。
+
+导入 `gcp-cvs` 后端上的卷称为 `gcpcvs_YEppr` 卷路径 `adroit-jolly-swift`、请使用以下命令：
+
+[listing]
+----
+tridentctl import volume gcpcvs_YEppr adroit-jolly-swift -f <path-to-pvc-file> -n trident
+
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE  | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-a46ccab7-44aa-4433-94b1-e47fc8c0fa55 | 93 GiB | gcp-storage   | file     | e1a6e65b-299e-4568-ad05-4f0a105c888f | online | true    |
++------------------------------------------+--------+---------------+----------+--------------------------------------+--------+---------+
+----
+
+NOTE: 卷路径是卷导出路径中： / 之后的部分。例如、如果导出路径为 `10.0.0.1:/adroit-jolly-swift`、卷路径为 `adroit-jolly-swift`。
+
+
+
+== `azure-netapp-files` 导入
+
+导入 `azure-netapp-files` 后端上的卷称为 `azurenetappfiles_40517` 卷路径 `importvol1`下，运行以下命令：
+
+[listing]
+----
+tridentctl import volume azurenetappfiles_40517 importvol1 -f <path-to-pvc-file> -n trident
+
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-0ee95d60-fd5c-448d-b505-b72901b3a4ab | 100 GiB | anf-storage   | file     | 1c01274f-d94b-44a3-98a3-04c953c9a51e | online | true    |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+----
+
+NOTE: ANF 卷的卷路径位于： / 之后的挂载路径中。例如、如果挂载路径为 `10.0.0.2:/importvol1`、卷路径为 `importvol1`。

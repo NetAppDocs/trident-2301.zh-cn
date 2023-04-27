@@ -1,0 +1,65 @@
+---
+sidebar: sidebar 
+permalink: trident-managing-k8s/upgrade-trident.html 
+keywords: upgrade, trident, methods, operator, tridentctl, helm 
+summary: Astra Trident 遵循季度发布节奏，每个日历年提供四个主要版本。每个新版本都是在先前版本的基础上构建的，可提供新功能和性能增强以及错误修复和改进功能。我们建议您每年至少升级一次，以利用 Astra Trident 中的新功能。 
+---
+= 升级 Astra Trident
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Astra Trident 遵循季度发布节奏，每个日历年提供四个主要版本。每个新版本都是在先前版本的基础上构建的，可提供新功能和性能增强以及错误修复和改进功能。我们建议您每年至少升级一次、以利用Astra Trident中的新功能。
+
+
+
+== 选择一个版本
+
+Astra Trident版本采用基于日期的版本 `YY.MM` 命名约定、其中"YY"是一年中的最后两位数字、"MM"是月份。DOT版本会遵循A `YY.MM.X` 约定、其中"X"是修补程序级别。您将根据要从中升级的版本选择要升级到的版本。
+
+* 您可以直接升级到已安装版本的四个版本窗口中的任何目标版本。例如、您可以直接从22.01升级到23.01 (包括任何DOT版本、例如22.01.1)。
+* 如果您使用的是早期版本、则应使用相应版本的文档执行多步升级、以获取具体说明。这要求您首先升级到适合您的四个版本窗口的最新版本。例如、如果您运行的是18.07、并且希望升级到20.07版本、请按照下面提供的多步升级过程进行操作：
++
+.. 首次从 18.07 升级到 19.07 。
+.. 然后从 19.07 升级到 20.07 。
+
+
+
+
+[WARNING]
+====
+* 对于19.04及更早版本的所有升级、都需要从Astra Trident元数据自身进行迁移 `etcd` 到CRD对象。请务必查看此版本的文档、了解升级的工作原理。
+* 升级时、请务必提供 `parameter.fsType` 在中 `StorageClasses` 由Astra Trident使用。您可以删除并重新创建 `StorageClasses` 而不会中断已有卷。这是对SAN卷强制实施https://kubernetes.io/docs/tasks/configure-pod-container/security-context/[security环境^的**要求。https://github.com/NetApp/trident/tree/master/trident-installer/sample-input[sample输入^]目录包含一些示例、例如https://github.com/NetApp/trident/blob/master/trident-installer/sample-input/storage-class-samples/storage-class-basic.yaml.templ[`storage-class-basic.yaml.templ`^)和链接：https://github.com/NetApp/trident/blob/master/trident-installer/sample-input/storage-class-samples/storage-class-bronze-default.yaml[`storage-class-bronze-default.yaml`^。有关详细信息，请参见 link:../trident-rn.html["已知问题"]。
+
+
+====
+
+
+== 选择升级选项
+
+升级Astra Trident有两种选择。通常、您将使用与初始安装相同的选项、但可以使用 link:../trident-get-started/kubernetes-deploy.html#moving-between-installation-methods["在安装方法之间切换"]。
+
+* link:upgrade-operator.html["使用Trident操作符进行升级"]
+* 
+
+
+
+WARNING: 从 Kubernetes 1.20 开始， CSI 卷快照现在是 GA 功能。在升级 Astra Trident 时，在执行升级之前，必须删除所有先前的 alpha snapshot CRS 和 CRD （卷快照类，卷快照和卷快照内容）。请参见 https://netapp.io/2020/01/30/alpha-to-beta-snapshots/["本博客"^] 了解将 alpha 快照迁移到测试版 /GA 规范所涉及的步骤。
+
+
+
+== 对运算符进行了更改
+
+Astra Trident 21.01 版为操作员引入了一些关键的架构变更，即：
+
+* 操作符现在为 * 集群范围 * 。以前的 Trident 运算符实例（版本 20.04 到 20.10 ）为 * 命名空间范围 * 。集群范围内的运算符具有优势，原因如下：
++
+** 资源责任：操作员现在可以在集群级别管理与 Astra Trident 安装相关的资源。在安装Astra Trident过程中、操作员使用创建和维护多个资源 `ownerReferences`。维护 `ownerReferences` 在集群范围的资源上、某些Kubernetes分销商可能会引发错误、例如OpenShift。使用集群范围的运算符可缓解此问题。对于 Trident 资源的自动修复和修补，这是一项基本要求。
+** 卸载期间清理：要完全删除 Astra Trident ，需要删除所有关联的资源。命名空间范围的运算符可能会在删除集群范围的资源（例如 clusterRole ， ClusterRoleBinding-and PodSecurityPolicy ）时遇到问题，并导致清理不完整。集群范围的运算符可消除此问题描述。用户可以完全卸载 Astra Trident 并在需要时重新安装。
+
+
+* `TridentProvisioner` 现已替换为 `TridentOrchestrator` 作为用于安装和管理Astra Trident的自定义资源。此外、还会在中引入一个新字段 `TridentOrchestrator` 规格用户可以指定必须使用安装/升级命名空间Trident `spec.namespace` 字段。您可以查看一个示例 https://github.com/NetApp/trident/blob/stable/v21.01/deploy/crds/tridentorchestrator_cr.yaml["此处"^]。
+
