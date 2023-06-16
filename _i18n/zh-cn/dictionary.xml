@@ -414,14 +414,6 @@
   <block id="ee50d481128d1543f9945b4a4f3fbe9d" category="paragraph">对于带气的安装，下面列出了安装 Astra Trident 所需的容器映像。使用<block ref="4ebf280824868255c952dc529072ecb9" prefix=" " category="inline-code"></block> 用于验证所需容器映像列表的命令。</block>
   <block id="aa92c4c233bc01609d957e469736b699" category="cell">容器映像</block>
   <block id="6f0b081bef5e745ef2429ef74472d9bd" category="cell">v1.21.0</block>
-  <block id="5e3673cc108f69c1b1e37872c6e40a61" category="list-text">NetApp/Trident：23.01.1</block>
-  <block id="9f523c82aa6c2773a498c832177d2ae0" category="list-text">netapp/trident autosupport：23.01</block>
-  <block id="3cfdc4b11ed575c2d8bbcea1746d0976" category="list-text">K8s.IO/SIG-storage/CsI-provisioner：v3.4.0</block>
-  <block id="57ad3884258dc4fe04c11750b8222daa" category="list-text">K8s.IO/SIG-storage/CSI-attacher：v4.1.0</block>
-  <block id="7f7b6bf613e5a94b472dc4003c3c9d47" category="list-text">K8s.IO/SIG-storage/CSI-resizer：v1.7.0</block>
-  <block id="bc5a94d13573ba35693929cfc2df5614" category="list-text">K8s.IO/SIG-storage/CSI-snapshotter：v6.2.1</block>
-  <block id="938a05d206d8fc8b1d8a4342f0a74da0" category="list-text">K8s.IO/SIG-storage/CsI-node-driver-registry:v2.7.0</block>
-  <block id="f4be622ffc379faa9b3471e5e49fce94" category="list-text">netapp/trident操作符：23.01.1 (可选)</block>
   <block id="681d715b456f6d29a501b8f132e941a1" category="cell">v1.22.0</block>
   <block id="73e93ad328287e5ce4c06228cfdba2bf" category="cell">v1.23.0</block>
   <block id="468bc1e7f7712a8dc9b91d063523cdff" category="cell">v1.24.0</block>
@@ -3663,4 +3655,12 @@
   <block id="a20f982d79c3dd66d244ffe0f7d940ee" category="sidebar">最佳实践和建议</block>
   <block id="c91cf7abea9584bc1edbc8ff4948ada0" category="sidebar">Astra Trident 集成</block>
   <block id="301ebdf8067a213d5a55c65fbb488290" category="sidebar">安全建议</block>
+  <block id="b3534e74dc10f418e0acfdf3093d680b" category="list-text">dDocker .io/NetApp/trident：23.01.1</block>
+  <block id="63085189271321ffdf59de5eb4e59b39" category="list-text">docer.io/NetApp/trident-autostsupport：23.01</block>
+  <block id="fbfd5a483c063bc4dafdef424b728e8c" category="list-text">注册表.k8s.io/sig-storage/CsI-置 配置程序：v3.4.0</block>
+  <block id="f148bc976a65950b788a09a64888f0cd" category="list-text">注册表.k8s.io/sig-storage/CsI-attacher：v4.1.0</block>
+  <block id="42b4a2f67addae58772b1c250a251f7e" category="list-text">注册表.k8s.io/sig-storage/CsI-6泽 程序：v1.7.0</block>
+  <block id="6171b5857bec22984fe260652936c7b1" category="list-text">注册表.k8s.io/sig-storage/CsI-snapshotter：v6.2.2</block>
+  <block id="87cd48d9616779fe4d3afb72f325eb12" category="list-text">注册表.k8s.io/sig-storage/CsI-N节点 驱动程序注册器：v2.7.0</block>
+  <block id="89580d488bd15aaf8753d0a85ab09cb0" category="list-text">dDocker .io/NetApp/trident-operator：23.01.1 (可选)</block>
 </blocks>
