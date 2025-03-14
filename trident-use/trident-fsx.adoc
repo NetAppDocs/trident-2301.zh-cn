@@ -18,7 +18,7 @@ https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/what-is-fsx-ontap.html["适用
 
 通过将 Astra Trident 与适用于 NetApp ONTAP 的 Amazon FSx 结合使用，您可以确保在 Amazon Elastic Kubernetes Service （ EKS ）中运行的 Kubernetes 集群可以配置由 ONTAP 备份的块和文件永久性卷。
 
-适用于 NetApp ONTAP 的 Amazon FSX 使用 https://docs.netapp.com/ontap-9/topic/com.netapp.doc.dot-mgng-stor-tier-fp/GUID-5A78F93F-7539-4840-AB0B-4A6E3252CF84.html["FabricPool"^] 以管理存储层。通过它，您可以根据数据是否经常访问来将数据存储在层中。
+Amazon FSx for NetApp ONTAP使用 https://docs.netapp.com/us-en/ontap/fabricpool/index.html["FabricPool"^]管理存储层。通过它，您可以根据数据是否经常访问来将数据存储在层中。
 
 
 

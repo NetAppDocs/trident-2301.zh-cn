@@ -45,7 +45,7 @@ Storage Virtual Machine （ SVM ）可在 ONTAP 系统上的租户之间实现�
 
 在每种情况下，接口都应位于 DNS 中，配置 Trident 时应使用 DNS 名称。这有助于在不使用网络身份保留的情况下实施某些灾难恢复方案，例如 SVM-DR 。
 
-在为 SVM 配置专用管理 LIF 或共享管理 LIF 之间没有任何偏好，但是，您应确保网络安全策略与您选择的方法一致。无论如何，管理 LIF 应可通过 DNS 访问，以实现最大的灵活性 https://docs.netapp.com/ontap-9/topic/com.netapp.doc.pow-dap/GUID-B9E36563-1C7A-48F5-A9FF-1578B99AADA9.html["SVM-DR"^] 与 Trident 结合使用。
+在为 SVM 配置专用管理 LIF 或共享管理 LIF 之间没有任何偏好，但是，您应确保网络安全策略与您选择的方法一致。无论如何、管理LIF应可通过DNS访问、以便最大程度地提高灵活性应与Trident结合使用。 https://docs.netapp.com/us-en/ontap/data-protection/snapmirror-svm-replication-concept.html["SVM-DR"^]
 
 
 
@@ -88,7 +88,7 @@ vserver modify -vserver <svm_name> -max-volumes <num_of_volumes>
 
 === 创建并使用 SVM QoS 策略
 
-利用应用于 SVM 的 ONTAP QoS 策略，限制 Trident 配置的卷可使用的 IOPS 数量。这有助于实现 http://docs.netapp.com/ontap-9/topic/com.netapp.doc.pow-perf-mon/GUID-77DF9BAF-4ED7-43F6-AECE-95DFB0680D2F.html?cp=7_1_2_1_2["防止抢占资源"^] 或控制不足的容器，以使其不会影响 Trident SVM 以外的工作负载。
+利用应用于 SVM 的 ONTAP QoS 策略，限制 Trident 配置的卷可使用的 IOPS 数量。这有助于 https://docs.netapp.com/us-en/ontap/performance-admin/guarantee-throughput-qos-task.html["防止抢占资源"^]或失控的容器影响Trident SVM之外的工作负载。
 
 您可以通过几个步骤为 SVM 创建 QoS 策略。有关最准确的信息，请参见适用于您的 ONTAP 版本的文档。以下示例将创建一个 QoS 策略，将 SVM 可用的总 IOPS 限制为 5000 。
 
@@ -118,7 +118,7 @@ IMPORTANT: 如果 ONTAP 版本早于 9.8 ，则应将此 QoS 策略组分配给 
 
 === 为 Trident 创建 QoS 策略组
 
-服务质量（ QoS ）可确保关键工作负载的性能不会因争用工作负载而降级。ONTAP QoS 策略组为卷提供 QoS 选项，并使用户能够为一个或多个工作负载定义吞吐量上限。有关 QoS 的详细信息，请参见 https://docs.netapp.com/ontap-9/topic/com.netapp.doc.pow-perf-mon/GUID-77DF9BAF-4ED7-43F6-AECE-95DFB0680D2F.html["通过 QoS 保证吞吐量"^]。您可以在后端或存储池中指定 QoS 策略组，这些策略组将应用于该池或后端创建的每个卷。
+服务质量（ QoS ）可确保关键工作负载的性能不会因争用工作负载而降级。ONTAP QoS 策略组为卷提供 QoS 选项，并使用户能够为一个或多个工作负载定义吞吐量上限。有关QoS的详细信息，请参见 https://docs.netapp.com/us-en/ontap/performance-admin/guarantee-throughput-qos-task.html["通过 QoS 保证吞吐量"^]。您可以在后端或存储池中指定 QoS 策略组，这些策略组将应用于该池或后端创建的每个卷。
 
 ONTAP 有两种类型的 QoS 策略组：传统和自适应。传统策略组以 IOPS 为单位提供固定的最大（或最小）吞吐量。自适应 QoS 会根据工作负载大小自动扩展吞吐量，并在工作负载大小发生变化时保持 IOPS 与 TBSGB 的比率。如果您要在大型部署中管理数百或数千个工作负载，则这将带来显著优势。
 
@@ -152,7 +152,7 @@ storage:
 * 您应该对每个卷应用策略组，以便每个卷都获得策略组指定的整个吞吐量。不支持共享策略组。
 
 
-有关 QoS 策略组的详细信息，请参见 https://docs.netapp.com/ontap-9/topic/com.netapp.doc.dot-cm-cmpr-980/TOC__qos.html["ONTAP 9.8 QoS 命令"^]。
+有关QoS策略组的详细信息，请参见 https://docs.netapp.com/us-en/ontap-cli-98/index.html["ONTAP 9.8 QoS 命令"^]。
 
 
 
@@ -282,8 +282,8 @@ NOTE: 具有增强型 CSI 配置程序的 Trident 支持使用 CHAP 身份验证
 * ONTAP *
 
 * https://www.netapp.com/us/media/tr-4067.pdf["NFS 最佳实践和实施指南"^]
-* http://docs.netapp.com/ontap-9/topic/com.netapp.doc.dot-cm-sanag/home.html["《 SAN 管理指南》"^] （对于 iSCSI ）
-* http://docs.netapp.com/ontap-9/topic/com.netapp.doc.exp-iscsi-rhel-cg/home.html["适用于 RHEL 的 iSCSI 快速配置"^]
+* https://docs.netapp.com/us-en/ontap/san-admin/index.html["SAN存储管理"^](适用于iSCSI)
+* https://docs.netapp.com/us-en/ontap/san-admin/provision-storage.html["适用于 RHEL 的 iSCSI 快速配置"^]
 
 
 * Element 软件 *
