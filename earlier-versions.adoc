@@ -15,7 +15,4 @@ summary: 如果您未运行最新版本，则可以参考有关先前版本的 A
 如果您运行的不是Asta Trident 23.01、则可以查看以前版本的文档。
 
 * https://docs.netapp.com/us-en/trident-2210/index.html["Astra Trident 22.10"^]
-* https://docs.netapp.com/us-en/trident-2207/index.html["Astra Trident 22.07"^]
-* https://docs.netapp.com/us-en/trident-2204/index.html["Astra Trident 22.04"^]
-* https://docs.netapp.com/us-en/trident-2201/index.html["Astra Trident 22.01"^]
 
