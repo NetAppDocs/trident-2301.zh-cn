@@ -159,12 +159,6 @@
   <block id="ba09ee47d11962c1ccd13d7e1f10e6c5" category="doc">文档的早期版本</block>
   <block id="3fe5d266a33f137293c314a2e334b611" category="inline-link">Astra Trident 22.10</block>
   <block id="9fefe9ff51badc61edd8a36c8240aa29" category="list-text"><block ref="9fefe9ff51badc61edd8a36c8240aa29" category="inline-link-rx"></block></block>
-  <block id="21d437ff7c8ceb5481603b5d2c05442a" category="inline-link">Astra Trident 22.07</block>
-  <block id="8a7908446b584a99ce1055c602a9c74e" category="list-text"><block ref="8a7908446b584a99ce1055c602a9c74e" category="inline-link-rx"></block></block>
-  <block id="c53358822905bb04d312060d1cb568af" category="inline-link">Astra Trident 22.04</block>
-  <block id="fdd380631ba8063e7b8f842282a01e40" category="list-text"><block ref="fdd380631ba8063e7b8f842282a01e40" category="inline-link-rx"></block></block>
-  <block id="4af8991c21dff2f779496b8350d1124b" category="inline-link">Astra Trident 22.01</block>
-  <block id="7669b0b69333e81c7c208aea3d1a3c6f" category="list-text"><block ref="7669b0b69333e81c7c208aea3d1a3c6f" category="inline-link-rx"></block></block>
   <block id="b928e0aee19c1e2cc91c85e8a0856936" category="summary">使用此处提供的指针排除安装和使用 Astra Trident 时可能遇到的问题。</block>
   <block id="231cf4c70d866b616c21baddaeed0696" category="doc">故障排除</block>
   <block id="8ef0ab9bbedaa7608c9abed7c7213218" category="admonition">要获得有关Astra Trident的帮助、请使用创建支持包<block ref="1d41e2024c69110ad6054ffc785ca8e0" prefix=" " category="inline-code"></block> 并将其发送到<block ref="da34ca64df3f236a423516102d4096c2" prefix=" " category="inline-code"></block>。</block>
@@ -3640,4 +3634,5 @@
   <block id="bfe205fb40c84219c58294b919b0802b" category="paragraph">Amazon FSx for NetApp ONTAP使用<block ref="100bdb811c1b823e066dd7c237e74575" category="inline-link-rx"></block>管理存储层。通过它，您可以根据数据是否经常访问来将数据存储在层中。</block>
   <block id="15eaa3bd461b989a50d54376e8b82942" category="example-title">&lt;strong&gt;使用NetApp Console管理 Kubernetes 集群&lt;/strong&gt;</block>
   <block id="28cfb8f261719a05032a41acccc32995" category="paragraph">借助使用NetApp Console 的Astra Trident ，您可以升级到最新版本的Astra Trident，添加和管理存储类并将其连接到工作环境，以及使用Cloud Backup Service备份持久卷。控制台支持使用Trident操作员手动或使用 Helm 部署Astra Trident 。</block>
+  <block id="b09c1c20916b590511efd54db64df61c" category="paragraph">++ 注意：运行此命令后，ONTAP 提示输入证书。粘贴步骤 1 中生成的<block ref="0c7b1ee06b5fdaab7c83f24275255cf5" prefix=" " category="inline-code"></block>文件内容，然后输入<block ref="b1a326c06d88bf042f73d70f50197905" prefix=" " category="inline-code"></block>以完成安装。</block>
 </blocks>
