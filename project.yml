@@ -51,8 +51,6 @@ sidebar:
     url: "/troubleshooting.html"
   - section: trident-reco
   - section: trident-reference
-  - title: 早期版本
-    url: "/earlier-versions.html"
   - title: 法律声明
     url: "/legal-notices.html"
 product-family:
